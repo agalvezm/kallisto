@@ -223,6 +223,10 @@ void ParseOptionsEM(int argc, char **argv, ProgramOptions& opt) {
     opt.single_end = true;
   }
 
+  if (long_flag) {
+    opt.long_read = true;
+  }
+  
   if (strand_FR_flag) {
     opt.strand_specific = true;
     opt.strand = ProgramOptions::StrandType::FR;
@@ -406,7 +410,11 @@ void ParseOptionsPseudo(int argc, char **argv, ProgramOptions& opt) {
   if (single_flag) {
     opt.single_end = true;
   }
-
+ 
+  if (long_flag) {
+    opt.long_read = true;
+  }
+   
   if (strand_flag) {
     opt.strand_specific = true;
   }
