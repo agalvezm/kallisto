@@ -34,7 +34,7 @@ public:
   SequenceReader(const ProgramOptions& opt) :
   fp1(0),fp2(0),seq1(0),seq2(0),
   l1(0),l2(0),nl1(0),nl2(0),
-  paired(!opt.single_end), files(opt.files),
+  paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), files(opt.files),
   f_umi(new std::ifstream{}),
   current_file(0), state(false) {}
   SequenceReader() :
@@ -121,6 +121,7 @@ public:
   char *buffer;
   size_t bufsize;
   bool paired;
+  bool long_read;
   const MinCollector& tc;
   std::vector<std::pair<int, std::string>> ec_umi;
   std::vector<std::pair<std::vector<int>, std::string>> new_ec_umi;
