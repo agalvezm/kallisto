@@ -79,12 +79,14 @@ int ProcessBatchReads(KmerIndex& index, const ProgramOptions& opt, MinCollector&
   size_t numreads = 0;
   size_t nummapped = 0;
 
-  bool paired = !opt.single_end;
-  
+  bool paired = (!opt.single_end && !opt.long_read);
+
   if (paired) {
     std::cerr << "[quant] running in paired-end mode" << std::endl;
-  } else {
+  } else if (!long_read) {
     std::cerr << "[quant] running in single-end mode" << std::endl;
+  } else {
+    std::cerr << "[quant] running in long read mode" << std::endl;
   }
 
   for (const auto& fs : opt.batch_files) { 
@@ -143,7 +145,7 @@ int ProcessReads(KmerIndex& index, const ProgramOptions& opt, MinCollector& tc) 
   //int tlencount = (opt.fld == 0.0) ? 10000 : 0;
   size_t numreads = 0;
   size_t nummapped = 0;
-  bool paired = !opt.single_end;
+  bool paired = (!opt.single_end && !opt.long_read);
 
   /*
   std::vector<std::pair<KmerEntry,int>> v1, v2;
@@ -155,8 +157,10 @@ int ProcessReads(KmerIndex& index, const ProgramOptions& opt, MinCollector& tc) 
 
   if (paired) {
     std::cerr << "[quant] running in paired-end mode" << std::endl;
-  } else {
+  } else if (!long_read) {
     std::cerr << "[quant] running in single-end mode" << std::endl;
+  } else {
+    std::cerr << "[quant] running in long read mode" << std::endl;
   }
 
   for (int i = 0; i < opt.files.size(); i += (paired) ? 2 : 1) {
@@ -433,7 +437,7 @@ void MasterProcessor::outputFusion(const std::stringstream &o) {
 
 
 ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, const MinCollector& tc, MasterProcessor& mp, int _id) :
- paired(!opt.single_end), tc(tc), index(index), mp(mp), id(_id) {
+ paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), tc(tc), index(index), mp(mp), id(_id) {
    // initialize buffer
    bufsize = 1ULL<<23;
    buffer = new char[bufsize];
@@ -444,7 +448,7 @@ ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, 
      if (opt.umi) {
        batchSR.umi_files = {opt.umi_files[id]};
      }
-     batchSR.paired = !opt.single_end;
+     batchSR.paired = (!opt.single_end && !opt.long_read);
    }
 
    seqs.reserve(bufsize/50);
@@ -458,6 +462,7 @@ ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, 
 
 ReadProcessor::ReadProcessor(ReadProcessor && o) :
   paired(o.paired),
+  long_read(o.long_read),
   tc(o.tc),
   index(o.index),
   mp(o.mp),
@@ -517,14 +522,17 @@ void ReadProcessor::operator()() {
 
 void ReadProcessor::processBuffer() {
   // set up thread variables
-  std::vector<std::pair<KmerEntry,int>> v1, v2;
+  std::vector<std::pair<KmerEntry,int>> v1, v2, vlr;
   std::vector<int> vtmp;
   std::vector<int> u;
 
-  u.reserve(1000);
-  v1.reserve(1000);
-  v2.reserve(1000);
-  vtmp.reserve(1000);
+  // Make these vectors 10000 instead of 1000 so that they can hold long reads. 
+  u.reserve(10000);
+  v1.reserve(10000);
+  v2.reserve(10000);
+  vlr.reserve(10000);
+  lr.reserve(10000);
+  vtmp.reserve(10000);
 
   const char* s1 = 0;
   const char* s2 = 0;
@@ -563,6 +571,7 @@ void ReadProcessor::processBuffer() {
   // actually process the sequences
   for (int i = 0; i < seqs.size(); i++) {
     s1 = seqs[i].first;
+    // l1 is length of seqs[i]
     l1 = seqs[i].second;
     if (paired) {
       i++;
@@ -573,8 +582,12 @@ void ReadProcessor::processBuffer() {
     numreads++;
     v1.clear();
     v2.clear();
+    vlr.clear();
+    lr.clear();
     u.clear();
 
+    // s1 is the sequence, l1 is the length of the sequence, 
+    // and v1 is the vector to hold the kmer, ec pairs returned by match
     // process read
     index.match(s1,l1, v1);
     if (paired) {
@@ -583,7 +596,7 @@ void ReadProcessor::processBuffer() {
 
     // collect the target information
     int ec = -1;
-    int r = tc.intersectKmers(v1, v2, !paired,u);
+    int r = tc.intersectKmers(v1, v2, !paired, u);
     if (u.empty()) {
       if (mp.opt.fusion && !(v1.empty() || v2.empty())) {
         searchFusion(index,mp.opt,tc,mp,ec,names[i-1].first,s1,v1,names[i].first,s2,v2,paired);
@@ -594,10 +607,92 @@ void ReadProcessor::processBuffer() {
 
 
     /* --  possibly modify the pseudoalignment  -- */
+    if (long_read){
+      vtmp.clear();
+      // inspect the positions
+      int fl = (int) tc.get_mean_frag_len();
+      int p = -1;
+      KmerEntry val;
+      Kmer km;
 
+      if (!v1.empty()) {
+        p = findFirstMappingKmer(v1,val);
+        km = Kmer((s1+p));
+      }
+
+      // for each transcript in the pseudoalignment
+      for (auto tr : u) {
+        //use:  (pos,sense) = index.findPosition(tr,km,val,p)
+        //pre:  index.kmap[km] == val,
+        //      km is the p-th k-mer of a read
+        //      val.contig maps to tr
+        //post: km is found in position pos (1-based) on the sense/!sense strand of tr
+        auto x = index.findPosition(tr, km, val, p);
+        // if the fragment is within bounds for this transcript, keep it
+        if (x.second && x.first + fl <= index.target_lens_[tr]) {
+          vtmp.push_back(tr);
+        } else {
+          //pass
+        }
+        if (!x.second && x.first - fl >= 0) {
+          vtmp.push_back(tr);
+        } else {
+          //pass
+        }
+      }
+
+      if (vtmp.size() < u.size()) {
+        u = vtmp; // copy
+      }
+      
+      // Now find the approx. effective length. 
+      index.match(s1[5:s1.size()],l1-5, vlr);
+      
+      // collect the target information
+      int ec = -1;
+      int r = tc.intersectKmers(v1, v2, !paired, lr);
+      if (lr.empty()) {
+        if (mp.opt.fusion && !(v1.empty() || v2.empty())) {
+          searchFusion(index,mp.opt,tc,mp,ec,names[i-1].first,s1[5:s1.size()],v1,names[i].first,s2[5:s2.size()],v2,paired);
+        }
+      } else {
+        ec = tc.findEC(lr);
+      }
+      
+      if (!vlr.empty()) {
+        p = findFirstMappingKmer(vlr,val);
+        km = Kmer((s1[5:s1.size()]+p));
+      }
+      
+            // for each transcript in the pseudoalignment
+      for (auto tr : lr) {
+        //use:  (pos,sense) = index.findPosition(tr,km,val,p)
+        //pre:  index.kmap[km] == val,
+        //      km is the p-th k-mer of a read
+        //      val.contig maps to tr
+        //post: km is found in position pos (1-based) on the sense/!sense strand of tr
+        auto x = index.findPosition(tr, km, val, p);
+        // if the fragment is within bounds for this transcript, keep it
+        if (x.second && x.first + fl <= index.target_lens_[tr]) {
+          vtmp.push_back(tr);
+        } else {
+          //pass
+        }
+        if (!x.second && x.first - fl >= 0) {
+          vtmp.push_back(tr);
+        } else {
+          //pass
+        }
+      }
+      
+      if (vtmp.size() <= 2) {
+         
+      }
+      
+    }
     // If we have paired end reads where one end maps or single end reads, check if some transcsripts
     // are not compatible with the mean fragment length
-    if (!mp.opt.umi && !u.empty() && (!paired || v1.empty() || v2.empty()) && tc.has_mean_fl) {
+    else if (!mp.opt.umi && !u.empty() && (!paired || v1.empty() || v2.empty()) && tc.has_mean_fl) {
       vtmp.clear();
       // inspect the positions
       int fl = (int) tc.get_mean_frag_len();
@@ -616,6 +711,11 @@ void ReadProcessor::processBuffer() {
 
       // for each transcript in the pseudoalignment
       for (auto tr : u) {
+        //use:  (pos,sense) = index.findPosition(tr,km,val,p)
+        //pre:  index.kmap[km] == val,
+        //      km is the p-th k-mer of a read
+        //      val.contig maps to tr
+        //post: km is found in position pos (1-based) on the sense/!sense strand of tr
         auto x = index.findPosition(tr, km, val, p);
         // if the fragment is within bounds for this transcript, keep it
         if (x.second && x.first + fl <= index.target_lens_[tr]) {
