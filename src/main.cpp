@@ -329,6 +329,7 @@ void ParseOptionsEMOnly(int argc, char **argv, ProgramOptions& opt) {
 void ParseOptionsPseudo(int argc, char **argv, ProgramOptions& opt) {
   int verbose_flag = 0;
   int single_flag = 0;
+  int long_flag = 0; 
   int strand_flag = 0;
   int pbam_flag = 0;
   int umi_flag = 0;
