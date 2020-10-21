@@ -360,7 +360,7 @@ void MasterProcessor::processReads() {
 
 void MasterProcessor::update(const std::vector<int>& c, const std::vector<std::vector<int> > &newEcs, 
                             std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, 
-                            int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int> &bias, int id) {
+                            int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int>& flens_lr_c, std::vector<int> &bias, int id) {
   // acquire the writer lock
   std::lock_guard<std::mutex> lock(this->writer_lock);
 
@@ -417,6 +417,7 @@ void MasterProcessor::update(const std::vector<int>& c, const std::vector<std::v
   if (!flens_lr.empty()) {
     for (int i = 0; i < flens_lr.size(); i++) {
       tc.flens_lr[i] = flens_lr[i];
+      tc.flens_lr_c[i] = flens_lr_c[i];
     }
   }
 
@@ -482,6 +483,7 @@ ReadProcessor::ReadProcessor(ReadProcessor && o) :
   newEcs(std::move(o.newEcs)),
   flens(std::move(o.flens)),
   flens_lr(std::move(o.flens_lr)),
+  flens_lr_c(std::move(o.flens_lr_c)),
   bias5(std::move(o.bias5)),
   batchSR(std::move(o.batchSR)),
   counts(std::move(o.counts)) {
@@ -522,7 +524,7 @@ void ReadProcessor::operator()() {
     processBuffer();
 
     // update the results, MP acquires the lock
-    mp.update(counts, newEcs, ec_umi, new_ec_umi, paired ? seqs.size()/2 : seqs.size(), flens, flens_lr, bias5, id);
+    mp.update(counts, newEcs, ec_umi, new_ec_umi, paired ? seqs.size()/2 : seqs.size(), flens, flens_lr, flens_lr_c, bias5, id);
     clear();
   }
 }
@@ -655,7 +657,7 @@ void ReadProcessor::processBuffer() {
       }
       
       // Now find the approx. effective length. 
-      index.match(s1[5:s1.size()],l1-5, vlr);
+      index.match(s1[4:s1.size()-5],l1-10, vlr);
       
       // collect the target information
       int ec = -1;
@@ -1077,6 +1079,7 @@ SequenceReader::SequenceReader(SequenceReader&& o) :
   nl1(o.nl1),
   nl2(o.nl2),
   paired(o.paired),
+  long_read(o.long_read),
   files(std::move(o.files)),
   umi_files(std::move(o.umi_files)),
   f_umi(std::move(o.f_umi)),
