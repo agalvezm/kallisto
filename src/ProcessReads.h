@@ -137,6 +137,7 @@ public:
   std::vector<std::string> umis;
   std::vector<std::vector<int>> newEcs;
   std::vector<int> flens;
+  std::vector<int> flens_lr; 
   std::vector<int> bias5;
 
   std::vector<int> counts;
