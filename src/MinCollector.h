@@ -21,6 +21,7 @@ struct MinCollector {
       counts(index.ecmap.size(), 0),
       flens(MAX_FRAG_LEN),
       flens_lr(ind.num_trans),
+      flens_lr_c(ind.num_trans),
       bias3(4096),
       bias5(4096),
       min_range(opt.min_range),
@@ -84,6 +85,7 @@ struct MinCollector {
   std::vector<int> counts;
   std::vector<int> flens;
   std::vector<int> flens_lr; 
+  std::vector<int> flens_lr_c; 
   std::vector<int> bias3, bias5;
   int min_range;
   int k;
