@@ -679,7 +679,7 @@ void ReadProcessor::processBuffer() {
       
       if (!vlr.empty()) {
         p = findFirstMappingKmer(vlr,val);
-        km = Kmer((s1[4:s1.size()-5]+p));
+        km = Kmer((slr+p));
       }
       
             // for each transcript in the pseudoalignment
@@ -876,7 +876,7 @@ void ReadProcessor::processBuffer() {
         p = findFirstMappingKmer(vlr,val);
         p2 = findFirstMappingKmer(vlr,val2);
         km = Kmer((slr+p));
-        km2 = Kmer((slr+(p2)));
+        km2 = Kmer((slr+p2));
         auto x = index.findPosition(lr[0], km, val, p);
         auto x2 = index.findPosition(lr[0], km2, val2, p2);
         int tl = x2.first + index.k - x.first; 
