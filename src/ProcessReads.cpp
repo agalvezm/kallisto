@@ -80,6 +80,7 @@ int ProcessBatchReads(KmerIndex& index, const ProgramOptions& opt, MinCollector&
   size_t nummapped = 0;
 
   bool paired = (!opt.single_end && !opt.long_read);
+  bool long_read = opt.long_read;
 
   if (paired) {
     std::cerr << "[quant] running in paired-end mode" << std::endl;
