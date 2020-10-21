@@ -547,7 +547,7 @@ void ReadProcessor::processBuffer() {
 
   const char* s1 = 0;
   const char* s2 = 0;
-  std::vector<char> slr; 
+  const char* slr;
   int l1,l2;
 
   bool findFragmentLength = (mp.opt.fld == 0) && (mp.tlencount < 10000);
@@ -622,8 +622,9 @@ void ReadProcessor::processBuffer() {
 
     /* --  possibly modify the pseudoalignment  -- */
     if (long_read){
+      slr = new char[l1-8]; 
       for (int i = 4; i < s1.size() - 4; i++) {
-        slr.push_back(s1[i]);
+        slr[i-4] = s1[i];
       } 
       index.match(slr,l1-8, vlr);
       vtmp.clear();
@@ -885,6 +886,10 @@ void ReadProcessor::processBuffer() {
           flen_lr_c[lr[0]]++;
         }
       }
+    }
+    
+    if (long_read){
+      delete[] slr; 
     }
 
     // pseudobam
