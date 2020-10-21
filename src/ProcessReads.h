@@ -59,6 +59,7 @@ public:
   kseq_t *seq1 = 0, *seq2 = 0;
   int l1,l2,nl1,nl2;
   bool paired;
+  bool long_read;
   std::vector<std::string> files;
   std::vector<std::string> umi_files;
   std::unique_ptr<std::ifstream> f_umi;
