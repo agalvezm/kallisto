@@ -549,7 +549,7 @@ bool CheckOptionsEM(ProgramOptions& opt, bool emonly = false) {
       ret = false;
     }*/
 
-    if (!opt.single_end) {
+    if (!opt.single_end && !opt.long_read) {
       if (opt.files.size() % 2 != 0) {
         cerr << "Error: paired-end mode requires an even number of input files" << endl
              << "       (use --single for processing single-end reads)" << endl;
@@ -773,7 +773,7 @@ bool CheckOptionsPseudo(ProgramOptions& opt) {
     ret = false;
   }*/
 
-  if (!opt.single_end) {
+  if (!opt.single_end && !opt.long_read) {
     if (opt.files.size() % 2 != 0) {
       cerr << "Error: paired-end mode requires an even number of input files" << endl
            << "       (use --single for processing single-end reads)" << endl;
@@ -1151,10 +1151,10 @@ int main(int argc, char *argv[]) {
 
         // if mean FL not provided, estimate
         std::vector<int> fld;
-        if (opt.fld == 0.0) {
+        if (opt.fld == 0.0 && !opt.long_read) {
           fld = collection.flens; // copy
           collection.compute_mean_frag_lens_trunc();
-        } else {
+        } else if (!opt.long_read) {
           auto mean_fl = (opt.fld > 0.0) ? opt.fld : collection.get_mean_frag_len();
           auto sd_fl = opt.sd;
           collection.init_mean_fl_trunc( mean_fl, sd_fl );
@@ -1164,6 +1164,11 @@ int main(int argc, char *argv[]) {
           // for (size_t i = 0; i < collection.mean_fl_trunc.size(); ++i) {
           //   cout << "--- " << i << '\t' << collection.mean_fl_trunc[i] << endl;
           // }
+        } else {
+          mean_fl.reserve(collection.flens_lr.size());  
+          for (int i = 0; i < collection.flens_lr.size(); i++){
+            mean_fl[i] = double(collection.flens_lr[i])/double(collection.flens_lr_c[i]);
+          }
         }
 
         std::vector<int> preBias(4096,1);
