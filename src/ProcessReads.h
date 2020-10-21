@@ -111,7 +111,7 @@ public:
   std::vector<std::vector<std::pair<std::vector<int>, std::string>>> newBatchECumis;
   void processReads();
 
-  void update(const std::vector<int>& c, const std::vector<std::vector<int>>& newEcs, std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, int n, std::vector<int>& flens, std::vector<int> &bias, int id = -1);
+  void update(const std::vector<int>& c, const std::vector<std::vector<int>>& newEcs, std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int>& flens_lr_c, std::vector<int> &bias, int id = -1);
 };
 
 class ReadProcessor {
