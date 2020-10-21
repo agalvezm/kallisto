@@ -42,7 +42,15 @@ struct EMAlgorithm {
     opt(opt)
   {
     assert(all_fl_means.size() == index_.target_lens_.size());
-    eff_lens_ = calc_eff_lens(index_.target_lens_, all_fl_means);
+    if (opt.long_read){
+      eff_lens_.reserve(tc.flens_lr.size());  
+      for (int i = 0; i < tc.flens_lr.size(); i++){
+        eff_lens_[i] = double(tc.flens_lr[i])/double(tc.flens_lr_c[i]);
+      }
+    }
+    else {
+      eff_lens_ = calc_eff_lens(index_.target_lens_, all_fl_means);
+    }
     weight_map_ = calc_weights (tc_.counts, ecmap_, eff_lens_);    
     assert(target_names_.size() == eff_lens_.size());
   }
@@ -66,7 +74,7 @@ struct EMAlgorithm {
 
     int i;
     for (i = 0; i < n_iter; ++i) {
-      if (recomputeEffLen && (i == min_rounds || i == min_rounds + 500)) {
+      if (recomputeEffLen && (i == min_rounds || i == min_rounds + 500) && !opt.long_read) {
         eff_lens_ = update_eff_lens(all_fl_means, tc_, index_, alpha_, eff_lens_, post_bias_, opt);
         weight_map_ = calc_weights (tc_.counts, ecmap_, eff_lens_);
       }
