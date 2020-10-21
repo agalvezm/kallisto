@@ -547,7 +547,7 @@ void ReadProcessor::processBuffer() {
 
   const char* s1 = 0;
   const char* s2 = 0;
-  const char* slr = 0;
+  char* slr = 0;
   int l1,l2;
 
   bool findFragmentLength = (mp.opt.fld == 0) && (mp.tlencount < 10000);
@@ -883,7 +883,7 @@ void ReadProcessor::processBuffer() {
         int tl = x2.first + index.k - x.first; 
         if (0 < tl && tl <= index.target_lens_[lr[0]]) {
           flens_lr[lr[0]] += tl;
-          flen_lr_c[lr[0]]++;
+          flens_lr_c[lr[0]]++;
         }
       }
     }
