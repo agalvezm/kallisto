@@ -1165,7 +1165,7 @@ int main(int argc, char *argv[]) {
           //   cout << "--- " << i << '\t' << collection.mean_fl_trunc[i] << endl;
           // }
         } else {
-          mean_fl.reserve(collection.flens_lr.size());  
+          std::vector<double> mean_fl(collection.flens_lr.size());  
           for (int i = 0; i < collection.flens_lr.size(); i++){
             mean_fl[i] = double(collection.flens_lr[i])/double(collection.flens_lr_c[i]);
           }
