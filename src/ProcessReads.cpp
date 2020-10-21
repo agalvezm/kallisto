@@ -360,7 +360,7 @@ void MasterProcessor::processReads() {
 
 void MasterProcessor::update(const std::vector<int>& c, const std::vector<std::vector<int> > &newEcs, 
                             std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, 
-                            int n, std::vector<int>& flens, std::vector<int> &bias, int id) {
+                            int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int> &bias, int id) {
   // acquire the writer lock
   std::lock_guard<std::mutex> lock(this->writer_lock);
 
@@ -412,6 +412,12 @@ void MasterProcessor::update(const std::vector<int>& c, const std::vector<std::v
       local_tlencount += flens[i];
     }
     tlencount += local_tlencount;
+  }
+  
+  if (!flens_lr.empty()) {
+    for (int i = 0; i < flens_lr.size(); i++) {
+      tc.flens_lr[i] = flens_lr[i];
+    }
   }
 
   if (!bias.empty()) {
@@ -475,6 +481,7 @@ ReadProcessor::ReadProcessor(ReadProcessor && o) :
   umis(std::move(o.umis)),
   newEcs(std::move(o.newEcs)),
   flens(std::move(o.flens)),
+  flens_lr(std::move(o.flens_lr)),
   bias5(std::move(o.bias5)),
   batchSR(std::move(o.batchSR)),
   counts(std::move(o.counts)) {
@@ -515,7 +522,7 @@ void ReadProcessor::operator()() {
     processBuffer();
 
     // update the results, MP acquires the lock
-    mp.update(counts, newEcs, ec_umi, new_ec_umi, paired ? seqs.size()/2 : seqs.size(), flens, bias5, id);
+    mp.update(counts, newEcs, ec_umi, new_ec_umi, paired ? seqs.size()/2 : seqs.size(), flens, flens_lr, bias5, id);
     clear();
   }
 }
@@ -555,7 +562,6 @@ void ReadProcessor::processBuffer() {
   int maxBiasCount = 0;
   bool findBias = mp.opt.bias && (mp.biasCount < mp.maxBiasCount);
 
-
   int biasgoal  = 0;
   bias5.clear();
   if (findBias) {
@@ -587,8 +593,11 @@ void ReadProcessor::processBuffer() {
     u.clear();
 
     // s1 is the sequence, l1 is the length of the sequence, 
-    // and v1 is the vector to hold the kmer, ec pairs returned by match
+    // and v1 is the vector to hold the kmers, ec pairs returned by match
     // process read
+    // use:  match(s,l,v)
+    // pre:  v is initialized
+    // post: v contains all equiv classes for the k-mers in s
     index.match(s1,l1, v1);
     if (paired) {
       index.match(s2,l2, v2);
@@ -653,15 +662,15 @@ void ReadProcessor::processBuffer() {
       int r = tc.intersectKmers(v1, v2, !paired, lr);
       if (lr.empty()) {
         if (mp.opt.fusion && !(v1.empty() || v2.empty())) {
-          searchFusion(index,mp.opt,tc,mp,ec,names[i-1].first,s1[5:s1.size()],v1,names[i].first,s2[5:s2.size()],v2,paired);
+          searchFusion(index,mp.opt,tc,mp,ec,names[i-1].first,s1[4:s1.size()-5],v1,names[i].first,s2[4:s2.size()],v2,paired);
         }
       } else {
         ec = tc.findEC(lr);
       }
       
       if (!vlr.empty()) {
-        p = findFirstMappingKmer(vlr,val);
-        km = Kmer((s1[5:s1.size()]+p));
+        p = findFirstMappingKmer(v1[4:],val);
+        km = Kmer((s1[4:s1.size()-5]+p));
       }
       
             // for each transcript in the pseudoalignment
@@ -685,8 +694,8 @@ void ReadProcessor::processBuffer() {
         }
       }
       
-      if (vtmp.size() <= 2) {
-         
+      if (vtmp.size() < lr.size()) {
+         lr = vtmp; // copy
       }
       
     }
@@ -789,7 +798,7 @@ void ReadProcessor::processBuffer() {
     }
 
     // find the ec
-    if (!u.empty()) {
+    if (!u.empty() && !long_read) {
       ec = tc.findEC(u);
 
       if (!mp.opt.umi) {
@@ -825,6 +834,46 @@ void ReadProcessor::processBuffer() {
         if (0 < tl && tl < flens.size()) {
           flens[tl]++;
           flengoal--;
+        }
+      }
+    }
+    
+    if(!lr.empty() && long_read){
+      ec = tc.findEC(lr);
+
+      if (!mp.opt.umi) {
+        // count the pseudoalignment
+        if (ec == -1 || ec >= counts.size()) {
+          // something we haven't seen before
+          newEcs.push_back(lr);
+        } else {
+          // add to count vector
+          ++counts[ec];
+        }
+      } else {       
+        if (ec == -1 || ec >= counts.size()) {
+          new_ec_umi.emplace_back(lr, std::move(umis[i]));          
+        } else {
+          ec_umi.emplace_back(ec, std::move(umis[i]));
+        }
+      }
+
+      // collect fragment length info
+      if (long_read && 0 <= ec &&  ec < index.num_trans && !v1.empty()) {
+        int p = -1, p2 = -1;
+        KmerEntry val, val2;
+        Kmer km, km2;
+        // try to map the reads
+        p = findFirstMappingKmer(v1[4:],val);
+        p2 = findFirstMappingKmer(v1[v1.size()-5:],val2);
+        km = Kmer((s1[4:]+p));
+        km2 = Kmer((s1[4:]+(p2)));
+        auto x = index.findPosition(lr[0], km, val, p);
+        auto x2 = index.findPosition(lr[0], km2, val2, p2);
+        int tl = x2.first + index.k - x.first; 
+        if (0 < tl && tl <= index.target_lens_[lr[0]]) {
+          flens_lr[lr[0]] += tl;
+          flen_lr_c[lr[0]]++;
         }
       }
     }
