@@ -138,6 +138,7 @@ public:
   std::vector<std::vector<int>> newEcs;
   std::vector<int> flens;
   std::vector<int> flens_lr; 
+  std::vector<int> flens_lr_c;
   std::vector<int> bias5;
 
   std::vector<int> counts;
