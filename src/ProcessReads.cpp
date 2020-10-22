@@ -622,47 +622,15 @@ void ReadProcessor::processBuffer() {
 
     /* --  possibly modify the pseudoalignment  -- */
     if (long_read){
-      std::cout << "Making new slr" << std::endl; 
       slr = new char[l1-8]; 
       for (int i = 4; i < l1 - 4; i++) {
         slr[i-4] = s1[i];
       } 
-      index.match(slr,l1-8, vlr);
       vtmp.clear();
       // inspect the positions
       int p = -1;
       KmerEntry val;
       Kmer km;
-
-      if (!v1.empty()) {
-        p = findFirstMappingKmer(vlr,val);
-        km = Kmer((s1+p));
-      }
-
-      // for each transcript in the pseudoalignment
-      for (auto tr : u) {
-        //use:  (pos,sense) = index.findPosition(tr,km,val,p)
-        //pre:  index.kmap[km] == val,
-        //      km is the p-th k-mer of a read
-        //      val.contig maps to tr
-        //post: km is found in position pos (1-based) on the sense/!sense strand of tr
-        auto x = index.findPosition(tr, km, val, p);
-        // if the fragment is within bounds for this transcript, keep it
-        if (x.second && x.first + l1-8 <= index.target_lens_[tr]) {
-          vtmp.push_back(tr);
-        } else {
-          //pass
-        }
-        if (!x.second && x.first - l1-8 >= 0) {
-          vtmp.push_back(tr);
-        } else {
-          //pass
-        }
-      }
-
-      if (vtmp.size() < u.size()) {
-        u = vtmp; // copy
-      }
       
       // Now find the approx. effective length. 
       index.match(slr,l1-8, vlr);
@@ -706,6 +674,7 @@ void ReadProcessor::processBuffer() {
       
       if (vtmp.size() < lr.size()) {
          lr = vtmp; // copy
+         u = vtmp;
       }
       
     }
@@ -890,7 +859,6 @@ void ReadProcessor::processBuffer() {
     
     if (long_read){
       delete[] slr; 
-      std::cout << "deleting slr" << std::endl; 
     }
 
     // pseudobam
