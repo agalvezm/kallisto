@@ -148,6 +148,9 @@ int ProcessReads(KmerIndex& index, const ProgramOptions& opt, MinCollector& tc) 
   size_t nummapped = 0;
   bool paired = (!opt.single_end && !opt.long_read);
   bool long_read = opt.long_read; 
+  
+  flens_lr.resize(index.num_trans_,0);
+  flens_lr_c.resize(index.num_trans_,0);
 
   /*
   std::vector<std::pair<KmerEntry,int>> v1, v2;
@@ -466,6 +469,8 @@ ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, 
    }
    newEcs.reserve(1000);
    counts.reserve((int) (tc.counts.size() * 1.25));
+   flens_lr.resize(index.num_trans_,0);
+   flens_lr_c.resize(index.num_trans_,0);
    clear();
 }
 
