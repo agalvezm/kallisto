@@ -116,7 +116,7 @@ public:
 
 class ReadProcessor {
 public:
-  ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, const MinCollector& tc, MasterProcessor& mp, int id = -1);
+  ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, const MinCollector& tc, MasterProcessor& mp, int id = -1) : flens_lr(index.num_trans_,0), flens_lr_c(index.num_trans_,0);
   ReadProcessor(ReadProcessor && o);
   ~ReadProcessor();
   char *buffer;
