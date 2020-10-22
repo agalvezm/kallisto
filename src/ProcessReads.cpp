@@ -629,7 +629,6 @@ void ReadProcessor::processBuffer() {
       index.match(slr,l1-8, vlr);
       vtmp.clear();
       // inspect the positions
-      int fl = (int) tc.get_mean_frag_len();
       int p = -1;
       KmerEntry val;
       Kmer km;
@@ -648,12 +647,12 @@ void ReadProcessor::processBuffer() {
         //post: km is found in position pos (1-based) on the sense/!sense strand of tr
         auto x = index.findPosition(tr, km, val, p);
         // if the fragment is within bounds for this transcript, keep it
-        if (x.second && x.first + fl <= index.target_lens_[tr]) {
+        if (x.second && x.first + l1-8 <= index.target_lens_[tr]) {
           vtmp.push_back(tr);
         } else {
           //pass
         }
-        if (!x.second && x.first - fl >= 0) {
+        if (!x.second && x.first - l1-8 >= 0) {
           vtmp.push_back(tr);
         } else {
           //pass
@@ -692,12 +691,12 @@ void ReadProcessor::processBuffer() {
         //post: km is found in position pos (1-based) on the sense/!sense strand of tr
         auto x = index.findPosition(tr, km, val, p);
         // if the fragment is within bounds for this transcript, keep it
-        if (x.second && x.first + fl <= index.target_lens_[tr]) {
+        if (x.second && x.first + l1-8 <= index.target_lens_[tr]) {
           vtmp.push_back(tr);
         } else {
           //pass
         }
-        if (!x.second && x.first - fl >= 0) {
+        if (!x.second && x.first - l1-8 >= 0) {
           vtmp.push_back(tr);
         } else {
           //pass
