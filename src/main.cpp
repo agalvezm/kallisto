@@ -1268,10 +1268,10 @@ int main(int argc, char *argv[]) {
 
         std::vector<int> fld;
         // if mean FL not provided, estimate
-        if (opt.fld == 0.0) {
+        if (opt.fld == 0.0 && !opt.long_read) {
           collection.compute_mean_frag_lens_trunc();
           fld = collection.flens;
-        } else {
+        } else if (!opt.long_read) {
           auto mean_fl = (opt.fld > 0.0) ? opt.fld : collection.get_mean_frag_len();
           auto sd_fl = opt.sd;
           collection.init_mean_fl_trunc( mean_fl, sd_fl );
@@ -1281,6 +1281,11 @@ int main(int argc, char *argv[]) {
           // for (size_t i = 0; i < collection.mean_fl_trunc.size(); ++i) {
           //   cout << "--- " << i << '\t' << collection.mean_fl_trunc[i] << endl;
           // }
+        } else {
+          std::vector<double> mean_fl(collection.flens_lr.size());  
+          for (int i = 0; i < collection.flens_lr.size(); i++){
+            mean_fl[i] = double(collection.flens_lr[i])/double(collection.flens_lr_c[i]);
+          }
         }
 
         std::vector<int> preBias(4096,1); // default
