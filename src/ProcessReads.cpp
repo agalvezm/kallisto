@@ -622,6 +622,7 @@ void ReadProcessor::processBuffer() {
 
     /* --  possibly modify the pseudoalignment  -- */
     if (long_read){
+      std::cout << "Making new slr" << std::endl; 
       slr = new char[l1-8]; 
       for (int i = 4; i < l1 - 4; i++) {
         slr[i-4] = s1[i];
@@ -889,6 +890,7 @@ void ReadProcessor::processBuffer() {
     
     if (long_read){
       delete[] slr; 
+      std::cout << "deleting slr" << std::endl; 
     }
 
     // pseudobam
