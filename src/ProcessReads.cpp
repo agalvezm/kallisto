@@ -1375,13 +1375,6 @@ void ReadProcessor::processBuffer() {
         }
       }
     }
-    
-    if (long_read && slr != 0){
-      std::cout << "Deleting slr " << std::endl;
-      std::cout << "slr[0] = " << slr[0] << std::endl; 
-      delete[] slr; 
-    }
-
       
    if(!lr.empty() && long_read){
      ec = tc.findEC(lr);
@@ -1426,10 +1419,11 @@ void ReadProcessor::processBuffer() {
    }
 
 
-   if (long_read){
-     delete[] slr;
-   }
-
+  if (long_read && slr != nullptr){
+      //std::cout << "Deleting slr " << std::endl;
+      //std::cout << "slr[0] = " << slr[0] << std::endl; 
+      delete[] slr; 
+  }
 
     // pseudobam
     
