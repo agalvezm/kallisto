@@ -939,8 +939,9 @@ void MasterProcessor::outputFusion(const std::stringstream &o) {
 }
 
 
-ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, const MinCollector& tc, MasterProcessor& mp, int _id) :
- paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), tc(tc), index(index), mp(mp), id(_id) {
+ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, const MinCollector& tc, MasterProcessor& mp, int _id, int _local_id) :
+ paired(!opt.single_end && !opt.long_read), long_read(opt.long_read), tc(tc), index(index), mp(mp), id(_id), local_id(_local_id)
+{
    // initialize buffer
    bufsize = mp.bufsize;
    buffer = new char[bufsize];
