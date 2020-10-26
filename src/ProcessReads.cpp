@@ -1376,7 +1376,7 @@ void ReadProcessor::processBuffer() {
       }
     }
     
-    if (long_read){
+    if (long_read && slr != 0){
       std::cout << "Deleting slr " << std::endl;
       std::cout << "slr[0] = " << slr[0] << std::endl; 
       delete[] slr; 
