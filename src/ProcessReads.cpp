@@ -1177,7 +1177,7 @@ void ReadProcessor::processBuffer() {
         //post: km is found in position pos (1-based) on the sense/!sense strand of tr
         auto x = index.findPosition(tr, km, val, p);
         // if the fragment is within bounds for this transcript, keep it
-        if (x.second && x.first + l1-8 <= index.target_lens_[tr]) {
+        if (x.second && x.first + l1-4 <= index.target_lens_[tr]) {
           vtmp.push_back(tr);
         } else {
           //pass
@@ -1367,8 +1367,11 @@ void ReadProcessor::processBuffer() {
         km = Kmer((slr+p));
         km2 = Kmer((slr+p2));
         auto x = index.findPosition(lr[0], km, val, p);
-        auto x2 = index.findPosition(lr[lr.size()-1], km2, val2, p2);
-        int tl = x2.first + index.k - x.first + l1 - 8; 
+        auto x2 = index.findPosition(lr[0], km2, val2, p2);
+        int tl = -1; 
+        if (x.first != -1 && x2.first != -1) {
+          tl = l1
+        }
         if (0 < tl && tl <= index.target_lens_[lr[0]]) {
           flens_lr[lr[0]] += tl;
           flens_lr_c[lr[0]]++;
