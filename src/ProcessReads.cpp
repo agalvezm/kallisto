@@ -1358,17 +1358,18 @@ void ReadProcessor::processBuffer() {
 
       // collect fragment length info
       if (long_read && 0 <= ec &&  ec < index.num_trans && !vlr.empty()) {
+        std::vector<std::pair<KmerEntry,int>> vlr_end(vlr.end() - 5, vlr.end());
         int p = -1, p2 = -1;
         KmerEntry val, val2;
         Kmer km, km2;
         // try to map the reads
         p = findFirstMappingKmer(vlr,val);
-        p2 = findFirstMappingKmer(vlr,val2);
+        p2 = findFirstMappingKmer(vlr_end,val2);
         km = Kmer((slr+p));
         km2 = Kmer((slr+p2));
-        auto x = index.findPosition(lr[0], km, val, p);
-        auto x2 = index.findPosition(lr[0], km2, val2, p2);
-        int tl = x2.first + index.k - x.first; 
+        auto x = index.findPosition(lr, km, val, p);
+        auto x2 = index.findPosition(lr, km2, val2, p2);
+        int tl = x2.first + index.k - x.first + l1 - 8; 
         if (0 < tl && tl <= index.target_lens_[lr[0]]) {
           flens_lr[lr[0]] += tl;
           flens_lr_c[lr[0]]++;
@@ -1409,7 +1410,7 @@ void ReadProcessor::processBuffer() {
        km = Kmer((slr+p));
        km2 = Kmer((slr+p2));
        auto x = index.findPosition(lr[0], km, val, p);
-       auto x2 = index.findPosition(lr[0], km2, val2, p2);
+       auto x2 = index.findPosition(lr[lr.size() - 1], km2, val2, p2);
        int tl = x2.first + index.k - x.first;
        if (0 < tl && tl <= index.target_lens_[lr[0]]) {
          flens_lr[lr[0]] += tl;
