@@ -98,8 +98,10 @@ int64_t ProcessBatchReads(MasterProcessor& MP, const ProgramOptions& opt) {
   
   if (paired) {
     std::cerr << "[quant] running in paired-end mode" << std::endl;
-  } else {
+  } else if (!long_read) {
     std::cerr << "[quant] running in single-end mode" << std::endl;
+  } else {
+    std::cerr << "[quant] running in long read mode" << std::endl;
   }
 
   for (const auto& fs : opt.batch_files) { 
@@ -150,13 +152,22 @@ int64_t ProcessReads(MasterProcessor& MP, const  ProgramOptions& opt) {
   size_t numreads = 0;
   size_t nummapped = 0;
   bool paired = (!opt.single_end && !opt.long_read);
-  bool long_read = opt.long_read;
+  bool long_read = opt.long_read; 
+
+  /*
+  std::vector<std::pair<KmerEntry,int>> v1, v2;
+  v1.reserve(1000);
+  v2.reserve(1000);
+  */
+
 
 
   if (paired) {
     std::cerr << "[quant] running in paired-end mode" << std::endl;
-  } else {
+  } else if (!long_read) {
     std::cerr << "[quant] running in single-end mode" << std::endl;
+  } else {
+    std::cerr << "[quant] running in long read mode" << std::endl;
   }
 
   for (int i = 0; i < opt.files.size(); i += (paired) ? 2 : 1) {
@@ -737,7 +748,7 @@ void MasterProcessor::processAln(const EMAlgorithm& em, bool useEM = true) {
 
 void MasterProcessor::update(const std::vector<int>& c, const std::vector<std::vector<int> > &newEcs, 
                             std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, 
-                            int n, std::vector<int>& flens, std::vector<int> &bias, const PseudoAlignmentBatch& pseudobatch, std::vector<BUSData> &bv, std::vector<std::pair<BUSData, std::vector<int32_t>>> newBP, int *bc_len, int *umi_len,  int id, int local_id) {
+                            int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int>& flens_lr_c, std::vector<int> &bias, int id) {
   // acquire the writer lock
   std::lock_guard<std::mutex> lock(this->writer_lock);
 
@@ -798,6 +809,13 @@ void MasterProcessor::update(const std::vector<int>& c, const std::vector<std::v
         local_tlencount += flens[i];
       }
       tlencount += local_tlencount;
+    }
+  }
+  
+  if (!flens_lr.empty()) {
+    for (int i = 0; i < flens_lr.size(); i++) {
+      tc.flens_lr[i] = flens_lr[i];
+      tc.flens_lr_c[i] = flens_lr_c[i];
     }
   }
 
@@ -921,8 +939,8 @@ void MasterProcessor::outputFusion(const std::stringstream &o) {
 }
 
 
-ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, const MinCollector& tc, MasterProcessor& mp, int _id, int _local_id) :
- paired(!opt.single_end), tc(tc), index(index), mp(mp), id(_id), local_id(_local_id) {
+ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, const MinCollector& tc, MasterProcessor& mp, int _id) :
+ paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), tc(tc), index(index), mp(mp), id(_id) {
    // initialize buffer
    bufsize = mp.bufsize;
    buffer = new char[bufsize];
@@ -946,11 +964,14 @@ ReadProcessor::ReadProcessor(const KmerIndex& index, const ProgramOptions& opt, 
    }
    newEcs.reserve(1000);
    counts.reserve((int) (tc.counts.size() * 1.25));
+   flens_lr.resize(index.num_trans,0);
+   flens_lr_c.resize(index.num_trans,0);
    clear();
 }
 
 ReadProcessor::ReadProcessor(ReadProcessor && o) :
   paired(o.paired),
+  long_read(o.long_read),
   tc(o.tc),
   index(o.index),
   mp(o.mp),
@@ -965,6 +986,8 @@ ReadProcessor::ReadProcessor(ReadProcessor && o) :
   umis(std::move(o.umis)),
   newEcs(std::move(o.newEcs)),
   flens(std::move(o.flens)),
+  flens_lr(std::move(o.flens_lr)),
+  flens_lr_c(std::move(o.flens_lr_c)),
   bias5(std::move(o.bias5)),
   batchSR(std::move(o.batchSR)),
   counts(std::move(o.counts)) {
@@ -1054,7 +1077,6 @@ void ReadProcessor::processBuffer() {
   int maxBiasCount = 0;
   bool findBias = mp.opt.bias && (mp.biasCount < mp.maxBiasCount);
 
-
   int biasgoal  = 0;
   bias5.clear();
   if (findBias) {
@@ -1099,7 +1121,7 @@ void ReadProcessor::processBuffer() {
 
     // collect the target information
     int ec = -1;
-    int r = tc.intersectKmers(v1, v2, !paired,u);
+    int r = tc.intersectKmers(v1, v2, !paired, u);
     if (u.empty()) {
       if (mp.opt.fusion && !(v1.empty() || v2.empty())) {
         searchFusion(index,mp.opt,tc,mp,ec,names[i-1].first,s1,v1,names[i].first,s2,v2,paired);
@@ -1166,7 +1188,6 @@ void ReadProcessor::processBuffer() {
           //pass
         }
       }
-
       if (vtmp.size() < lr.size()) {
          lr = vtmp; // copy
          u = vtmp;
@@ -1196,6 +1217,11 @@ void ReadProcessor::processBuffer() {
 
       // for each transcript in the pseudoalignment
       for (auto tr : u) {
+        //use:  (pos,sense) = index.findPosition(tr,km,val,p)
+        //pre:  index.kmap[km] == val,
+        //      km is the p-th k-mer of a read
+        //      val.contig maps to tr
+        //post: km is found in position pos (1-based) on the sense/!sense strand of tr
         auto x = index.findPosition(tr, km, val, p);
         // if the fragment is within bounds for this transcript, keep it
         if (x.second && x.first + fl <= index.target_lens_[tr]) {
@@ -1307,6 +1333,50 @@ void ReadProcessor::processBuffer() {
           flengoal--;
         }
       }
+    }
+    
+    if(!lr.empty() && long_read){
+      ec = tc.findEC(lr);
+
+      if (!mp.opt.umi) {
+        // count the pseudoalignment
+        if (ec == -1 || ec >= counts.size()) {
+          // something we haven't seen before
+          newEcs.push_back(lr);
+        } else {
+          // add to count vector
+          ++counts[ec];
+        }
+      } else {       
+        if (ec == -1 || ec >= counts.size()) {
+          new_ec_umi.emplace_back(lr, std::move(umis[i]));          
+        } else {
+          ec_umi.emplace_back(ec, std::move(umis[i]));
+        }
+      }
+
+      // collect fragment length info
+      if (long_read && 0 <= ec &&  ec < index.num_trans && !vlr.empty()) {
+        int p = -1, p2 = -1;
+        KmerEntry val, val2;
+        Kmer km, km2;
+        // try to map the reads
+        p = findFirstMappingKmer(vlr,val);
+        p2 = findFirstMappingKmer(vlr,val2);
+        km = Kmer((slr+p));
+        km2 = Kmer((slr+p2));
+        auto x = index.findPosition(lr[0], km, val, p);
+        auto x2 = index.findPosition(lr[0], km2, val2, p2);
+        int tl = x2.first + index.k - x.first; 
+        if (0 < tl && tl <= index.target_lens_[lr[0]]) {
+          flens_lr[lr[0]] += tl;
+          flens_lr_c[lr[0]]++;
+        }
+      }
+    }
+    
+    if (long_read){
+      delete[] slr; 
     }
 
       
@@ -1425,7 +1495,7 @@ void ReadProcessor::clear() {
 
 
 BUSProcessor::BUSProcessor(const KmerIndex& index, const ProgramOptions& opt, const MinCollector& tc, MasterProcessor& mp, int _id, int _local_id) :
- paired(!opt.single_end), bam(opt.bam), num(opt.num), tc(tc), index(index), mp(mp), id(_id), local_id(_local_id), numreads(0) {
+ paired(!opt.single_end && !opt.long_read), bam(opt.bam), num(opt.num), tc(tc), index(index), mp(mp), id(_id), local_id(_local_id), numreads(0) {
    // initialize buffer
    bufsize = mp.bufsize;
    buffer = new char[bufsize];  
@@ -1707,7 +1777,7 @@ void BUSProcessor::clear() {
 
 
 AlnProcessor::AlnProcessor(const KmerIndex& index, const ProgramOptions& opt, MasterProcessor& mp, const EMAlgorithm& em, const Transcriptome &model, bool useEM, int _id) :
- paired(!opt.single_end), index(index), mp(mp), em(em), model(model), useEM(useEM), id(_id) {
+ paired(!opt.single_end && !opt.long_read), index(index), mp(mp), em(em), model(model), useEM(useEM), id(_id) {
    // initialize buffer
    bufsize = mp.bufsize;
    buffer = new char[bufsize];

@@ -401,9 +401,9 @@ void ParseOptionsPseudo(int argc, char **argv, ProgramOptions& opt) {
     // long args
     {"verbose", no_argument, &verbose_flag, 1},
     {"single", no_argument, &single_flag, 1},
-    //{"strand-specific", no_argument, &strand_flag, 1}, 
-    // Adding long-read option, which will handle fragment length differently than the single option.
+   // Adding long-read option, which will handle fragment length differently than the single option. 
     {"long", no_argument, &long_flag, 1},
+    //{"strand-specific", no_argument, &strand_flag, 1},
     {"pseudobam", no_argument, &pbam_flag, 1},
     {"quant", no_argument, &quant_flag, 1},
     {"umi", no_argument, &umi_flag, 'u'},
@@ -488,7 +488,11 @@ void ParseOptionsPseudo(int argc, char **argv, ProgramOptions& opt) {
   if (quant_flag) {
     opt.pseudo_quant = true;
   }
-
+ 
+  if (long_flag) {
+    opt.long_read = true;
+  }
+   
   if (strand_flag) {
     opt.strand_specific = true;
   }
