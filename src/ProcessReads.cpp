@@ -746,9 +746,7 @@ void MasterProcessor::processAln(const EMAlgorithm& em, bool useEM = true) {
   }
 }
 
-void MasterProcessor::update(const std::vector<int>& c, const std::vector<std::vector<int> > &newEcs, 
-                            std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, 
-                            int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int>& flens_lr_c, std::vector<int> &bias, int id) {
+void MasterProcessor::update(const std::vector<int>& c, const std::vector<std::vector<int>>& newEcs, std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int>& flens_lr_c, std::vector<int> &bias, const PseudoAlignmentBatch& pseudobatch, std::vector<BUSData> &bv, std::vector<std::pair<BUSData, std::vector<int32_t>>> newB, int *bc_len, int *umi_len,   int id, int local_id) {
   // acquire the writer lock
   std::lock_guard<std::mutex> lock(this->writer_lock);
 
@@ -1433,8 +1431,7 @@ void ReadProcessor::processBuffer() {
     if (mp.opt.pseudobam) {
       PseudoAlignmentInfo info;
       info.id = (paired) ? (i/2) : i; // read id
-      info.paired = (!opt.single_end && !opt.long_read);
-      info.long_read = opt.long_read;
+      info.paired = (!mp.opt.single_end && !mp.opt.long_read);
 
       if (!u.empty()) {
         info.r1empty = v1.empty();

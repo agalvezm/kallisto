@@ -66,9 +66,7 @@ public:
 class FastqSequenceReader : public SequenceReader {
 public:
 
-  FastqSequenceReader(const ProgramOptions& opt) : SequenceReader(opt),
-  current_file(0), paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), files(opt.files), files(opt.files),
-  f_umi(new std::ifstream{}) {
+  FastqSequenceReader(const ProgramOptions& opt) : SequenceReader(opt), current_file(0), paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), files(opt.files), files(opt.files), f_umi(new std::ifstream{}) {
     SequenceReader::state = false;
 
     if (opt.bus_mode) {
@@ -170,9 +168,7 @@ private:
 
 class MasterProcessor {
 public:
-  MasterProcessor (KmerIndex &index, const ProgramOptions& opt, MinCollector &tc, const Transcriptome& model)
-    : tc(tc), index(index), model(model), bamfp(nullptr), bamfps(nullptr), bamh(nullptr), opt(opt), numreads(0)
-    ,nummapped(0), num_umi(0), bufsize(1ULL<<23), tlencount(0), biasCount(0), maxBiasCount((opt.bias) ? 1000000 : 0), last_pseudobatch_id (-1) { 
+  MasterProcessor (KmerIndex &index, const ProgramOptions& opt, MinCollector &tc, const Transcriptome& model) : tc(tc), index(index), model(model), bamfp(nullptr), bamfps(nullptr), bamh(nullptr), opt(opt), numreads(0), nummapped(0), num_umi(0), bufsize(1ULL<<23), tlencount(0), biasCount(0), maxBiasCount((opt.bias) ? 1000000 : 0), last_pseudobatch_id (-1) { 
       if (opt.bam) {
         SR = new BamSequenceReader(opt);
       } else {
