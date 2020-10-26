@@ -1169,14 +1169,14 @@ void ReadProcessor::processBuffer() {
       }
 
 
-           // for each transcript in the pseudoalignment
+      // for each transcript in the pseudoalignment
       for (auto tr : lr) {
         //use:  (pos,sense) = index.findPosition(tr,km,val,p)
         //pre:  index.kmap[km] == val,
         //      km is the p-th k-mer of a read
         //      val.contig maps to tr
         //post: km is found in position pos (1-based) on the sense/!sense strand of tr
-        auto x = index.findPosition(tr, km, val, p);
+        auto x = index.findPosition(tr.first, km, val, p);
         // if the fragment is within bounds for this transcript, keep it
         if (x.second && x.first + l1-8 <= index.target_lens_[tr]) {
           vtmp.push_back(tr);
@@ -1367,8 +1367,8 @@ void ReadProcessor::processBuffer() {
         p2 = findFirstMappingKmer(vlr_end,val2);
         km = Kmer((slr+p));
         km2 = Kmer((slr+p2));
-        auto x = index.findPosition(lr, km, val, p);
-        auto x2 = index.findPosition(lr, km2, val2, p2);
+        auto x = index.findPosition(lr[0].first, km, val, p);
+        auto x2 = index.findPosition(lr[lr.size()-1].first, km2, val2, p2);
         int tl = x2.first + index.k - x.first + l1 - 8; 
         if (0 < tl && tl <= index.target_lens_[lr[0]]) {
           flens_lr[lr[0]] += tl;
