@@ -273,7 +273,7 @@ public:
   void writePseudoBam(const std::vector<bam1_t> &bv);
   void writeSortedPseudobam(const std::vector<std::vector<bam1_t>> &bvv);
   std::vector<uint64_t> breakpoints;
-  void update(const std::vector<int>& c, const std::vector<std::vector<int>>& newEcs, std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int>& flens_lr_c, std::vector<int> &bias, const PseudoAlignmentBatch& pseudobatch, std::vector<BUSData> &bv, std::vector<std::pair<BUSData, std::vector<int32_t>>> newB, int *bc_len, int *umi_len,   int id = -1, int local_id = -1);  
+  void update(const std::vector<int>& c, const std::vector<std::vector<int>>& newEcs, std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int>& flens_lr_c, std::vector<int> &bias, const PseudoAlignmentBatch& pseudobatch, std::vector<BUSData> &bv, std::vector<std::pair<BUSData, std::vector<int32_t>>> newBP, int *bc_len, int *umi_len,   int id = -1, int local_id = -1);  
 };
 
 class ReadProcessor {
