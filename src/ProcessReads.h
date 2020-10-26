@@ -66,7 +66,7 @@ public:
 class FastqSequenceReader : public SequenceReader {
 public:
 
-  FastqSequenceReader(const ProgramOptions& opt) : SequenceReader(opt), current_file(0), paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), files(opt.files), files(opt.files), f_umi(new std::ifstream{}) {
+  FastqSequenceReader(const ProgramOptions& opt) : SequenceReader(opt), current_file(0), paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), files(opt.files), f_umi(new std::ifstream{}) {
     SequenceReader::state = false;
 
     if (opt.bus_mode) {
