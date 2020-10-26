@@ -67,7 +67,7 @@ class FastqSequenceReader : public SequenceReader {
 public:
 
   FastqSequenceReader(const ProgramOptions& opt) : SequenceReader(opt),
-  current_file(0), paired(!opt.single_end), files(opt.files),
+  current_file(0), paired((!opt.single_end && !opt.long_read)), long_read(opt.long_read), files(opt.files),, files(opt.files),
   f_umi(new std::ifstream{}) {
     SequenceReader::state = false;
 
@@ -79,7 +79,7 @@ public:
     reserveNfiles(nfiles);
   }
   FastqSequenceReader() : SequenceReader(), 
-  paired(false), 
+  paired(false), long_read(false), 
   f_umi(new std::ifstream{}),
   current_file(0) {};
   FastqSequenceReader(FastqSequenceReader &&o);
@@ -102,6 +102,7 @@ public:
   std::vector<int> l;
   std::vector<int> nl;
   bool paired;
+  bool long_read;
   std::vector<std::string> files;
   std::vector<std::string> umi_files;
   std::unique_ptr<std::ifstream> f_umi;
@@ -276,7 +277,7 @@ public:
   void writePseudoBam(const std::vector<bam1_t> &bv);
   void writeSortedPseudobam(const std::vector<std::vector<bam1_t>> &bvv);
   std::vector<uint64_t> breakpoints;
-  void update(const std::vector<int>& c, const std::vector<std::vector<int>>& newEcs, std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, int n, std::vector<int>& flens, std::vector<int> &bias, const PseudoAlignmentBatch& pseudobatch, std::vector<BUSData> &bv, std::vector<std::pair<BUSData, std::vector<int32_t>>> newB, int *bc_len, int *umi_len,   int id = -1, int local_id = -1);  
+  void update(const std::vector<int>& c, const std::vector<std::vector<int>>& newEcs, std::vector<std::pair<int, std::string>>& ec_umi, std::vector<std::pair<std::vector<int>, std::string>> &new_ec_umi, int n, std::vector<int>& flens, std::vector<int>& flens_lr, std::vector<int>& flens_lr_c, std::vector<int> &bias, const PseudoAlignmentBatch& pseudobatch, std::vector<BUSData> &bv, std::vector<std::pair<BUSData, std::vector<int32_t>>> newB, int *bc_len, int *umi_len,   int id = -1, int local_id = -1);  
 };
 
 class ReadProcessor {
@@ -288,6 +289,7 @@ public:
   
   size_t bufsize;
   bool paired;
+  bool long_read;
   const MinCollector& tc;
   std::vector<std::pair<int, std::string>> ec_umi;
   std::vector<std::pair<std::vector<int>, std::string>> new_ec_umi;
@@ -307,6 +309,8 @@ public:
   std::vector<std::string> umis;
   std::vector<std::vector<int>> newEcs;
   std::vector<int> flens;
+  std::vector<int> flens_lr;
+  std::vector<int> flens_lr_c;
   std::vector<int> bias5;
 
   std::vector<int> counts;
@@ -326,6 +330,7 @@ public:
   
   size_t bufsize;
   bool paired;
+  bool long_read;
   bool bam;
   bool num;
   const MinCollector& tc;
@@ -347,6 +352,8 @@ public:
 
   std::vector<std::vector<int>> newEcs;
   std::vector<int> flens;
+  std::vector<int> flens_lr;
+  std::vector<int> flens_lr_c;
   std::vector<int> bias5;
   std::vector<int> counts;
   std::vector<BUSData> bv;
@@ -368,6 +375,7 @@ public:
   size_t bufsize;
   size_t bambufsize;
   bool paired;
+  bool long_read;
   std::vector<std::pair<int, std::string>> ec_umi;
   const KmerIndex& index;
   const EMAlgorithm& em;

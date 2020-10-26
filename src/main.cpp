@@ -154,6 +154,7 @@ void ParseOptionsEM(int argc, char **argv, ProgramOptions& opt) {
   int plaintext_flag = 0;
   int write_index_flag = 0;
   int single_flag = 0;
+  int long_flag = 0;
   int single_overhang_flag = 0;
   int strand_FR_flag = 0;
   int strand_RF_flag = 0;
@@ -168,7 +169,9 @@ void ParseOptionsEM(int argc, char **argv, ProgramOptions& opt) {
     {"verbose", no_argument, &verbose_flag, 1},
     {"plaintext", no_argument, &plaintext_flag, 1},
     {"write-index", no_argument, &write_index_flag, 1},
-    {"single", no_argument, &single_flag, 1},
+    {"single", no_argument, &single_flag, 1}, 
+    // Adding long-read option, which will handle fragment length differently than the single option.
+    {"long", no_argument, &long_flag, 1},
     {"single-overhang", no_argument, &single_overhang_flag, 1},
     {"fr-stranded", no_argument, &strand_FR_flag, 1},
     {"rf-stranded", no_argument, &strand_RF_flag, 1},
@@ -269,6 +272,10 @@ void ParseOptionsEM(int argc, char **argv, ProgramOptions& opt) {
 
   if (single_flag) {
     opt.single_end = true;
+  }
+
+  if (long_flag) {
+     opt.long_read = true;
   }
 
   if (single_overhang_flag) {
@@ -382,6 +389,7 @@ void ParseOptionsEMOnly(int argc, char **argv, ProgramOptions& opt) {
 void ParseOptionsPseudo(int argc, char **argv, ProgramOptions& opt) {
   int verbose_flag = 0;
   int single_flag = 0;
+  int long_flag = 0;
   int strand_flag = 0;
   int pbam_flag = 0;
   int gbam_flag = 0;
@@ -393,7 +401,9 @@ void ParseOptionsPseudo(int argc, char **argv, ProgramOptions& opt) {
     // long args
     {"verbose", no_argument, &verbose_flag, 1},
     {"single", no_argument, &single_flag, 1},
-    //{"strand-specific", no_argument, &strand_flag, 1},
+    //{"strand-specific", no_argument, &strand_flag, 1}, 
+    // Adding long-read option, which will handle fragment length differently than the single option.
+    {"long", no_argument, &long_flag, 1},
     {"pseudobam", no_argument, &pbam_flag, 1},
     {"quant", no_argument, &quant_flag, 1},
     {"umi", no_argument, &umi_flag, 'u'},
@@ -469,6 +479,10 @@ void ParseOptionsPseudo(int argc, char **argv, ProgramOptions& opt) {
   if (single_flag) {
     opt.single_end = true;
     opt.single_overhang = true;
+  }
+ 
+  if (long_flag) {
+    opt.long_read = true;
   }
   
   if (quant_flag) {
@@ -1152,7 +1166,7 @@ bool CheckOptionsEM(ProgramOptions& opt, bool emonly = false) {
       ret = false;
     }*/
 
-    if (!opt.single_end) {
+    if (!opt.single_end && !opt.long_read)  {
       if (opt.files.size() % 2 != 0) {
         cerr << "Error: paired-end mode requires an even number of input files" << endl
             << "       (use --single for processing single-end reads)" << endl;
@@ -1498,7 +1512,7 @@ bool CheckOptionsPseudo(ProgramOptions& opt) {
     ret = false;
   }*/
 
-  if (!opt.single_end) {
+  if (!opt.single_end && !opt.long_read)  {
     if (opt.files.size() % 2 != 0) {
       cerr << "Error: paired-end mode requires an even number of input files" << endl
            << "       (use --single for processing single-end reads)" << endl;
@@ -1778,6 +1792,7 @@ void usageEM(bool valid_input = true) {
        << "    --plaintext               Output plaintext instead of HDF5" << endl
        << "    --fusion                  Search for fusions for Pizzly" << endl
        << "    --single                  Quantify single-end reads" << endl
+       << "    --long                    Quantify long reads" << endl
        << "    --single-overhang         Include reads where unobserved rest of fragment is" << endl
        << "                              predicted to lie outside a transcript" << endl
        << "    --fr-stranded             Strand specific reads, first read forward" << endl
@@ -1813,6 +1828,7 @@ void usagePseudo(bool valid_input = true) {
        << "-b  --batch=FILE              Process files listed in FILE" << endl
        << "    --quant                   Quantify using EM algorithm (only in batch mode)" << endl
        << "    --single                  Quantify single-end reads" << endl
+       << "    --long                    Quantify long reads" << endl
        << "-l, --fragment-length=DOUBLE  Estimated average fragment length" << endl
        << "-s, --sd=DOUBLE               Estimated standard deviation of fragment length" << endl
        << "                              (default: -l, -s values are estimated from paired" << endl
@@ -2128,10 +2144,10 @@ int main(int argc, char *argv[]) {
 
         // if mean FL not provided, estimate
         std::vector<int> fld;
-        if (opt.fld == 0.0) {
+        if (opt.fld == 0.0 && !opt.long_read)  {
           fld = collection.flens; // copy
           collection.compute_mean_frag_lens_trunc();
-        } else {
+        } else if (!opt.long_read) {
           auto mean_fl = (opt.fld > 0.0) ? opt.fld : collection.get_mean_frag_len();
           auto sd_fl = opt.sd;
           collection.init_mean_fl_trunc( mean_fl, sd_fl );
@@ -2140,7 +2156,12 @@ int main(int argc, char *argv[]) {
 
           // for (size_t i = 0; i < collection.mean_fl_trunc.size(); ++i) {
           //   cout << "--- " << i << '\t' << collection.mean_fl_trunc[i] << endl;
-          // }
+          // }           
+        } else {
+          std::vector<double> mean_fl(collection.flens_lr.size()); 
+          for (int i = 0; i < collection.flens_lr.size(); i++){
+            mean_fl[i] = double(collection.flens_lr[i])/double(collection.flens_lr_c[i]);
+          }
         }
 
         std::vector<int> preBias(4096,1);
@@ -2280,10 +2301,10 @@ int main(int argc, char *argv[]) {
 
         std::vector<int> fld;
         // if mean FL not provided, estimate
-        if (opt.fld == 0.0) {
+        if (opt.fld == 0.0 && !opt.long_read) {
           collection.compute_mean_frag_lens_trunc();
           fld = collection.flens;
-        } else {
+        } else if (!opt.long_read) {
           auto mean_fl = (opt.fld > 0.0) ? opt.fld : collection.get_mean_frag_len();
           auto sd_fl = opt.sd;
           collection.init_mean_fl_trunc( mean_fl, sd_fl );
@@ -2292,7 +2313,12 @@ int main(int argc, char *argv[]) {
           fld = trunc_gaussian_counts(0, MAX_FRAG_LEN, mean_fl, sd_fl, 10000);
           // for (size_t i = 0; i < collection.mean_fl_trunc.size(); ++i) {
           //   cout << "--- " << i << '\t' << collection.mean_fl_trunc[i] << endl;
-          // }
+          // } 
+        } else {
+          std::vector<double> mean_fl(collection.flens_lr.size()); 
+          for (int i = 0; i < collection.flens_lr.size(); i++){
+            mean_fl[i] = double(collection.flens_lr[i])/double(collection.flens_lr_c[i]);
+          }
         }
 
         std::vector<int> preBias(4096,1); // default
