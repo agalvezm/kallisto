@@ -1176,7 +1176,7 @@ void ReadProcessor::processBuffer() {
         //      km is the p-th k-mer of a read
         //      val.contig maps to tr
         //post: km is found in position pos (1-based) on the sense/!sense strand of tr
-        auto x = index.findPosition(tr.first, km, val, p);
+        auto x = index.findPosition(tr, km, val, p);
         // if the fragment is within bounds for this transcript, keep it
         if (x.second && x.first + l1-8 <= index.target_lens_[tr]) {
           vtmp.push_back(tr);
