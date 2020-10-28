@@ -1358,10 +1358,11 @@ void ReadProcessor::processBuffer() {
 
       // collect fragment length info
       if (long_read && 0 <= ec &&  ec < index.num_trans && !vlr.empty()) {
+        std::vector<std::pair<KmerEntry,int>> vlr_end;
         if (vlr.size() > 5){
-          std::vector<std::pair<KmerEntry,int>> vlr_end(vlr.end() - 5, vlr.end());
+          vlr_end(vlr.end() - 5, vlr.end());
         } else {
-          std::vector<std::pair<KmerEntry,int>> vlr_end = vlr; 
+          vlr_end = vlr; 
         }
         int p = -1, p2 = -1;
         KmerEntry val, val2;
