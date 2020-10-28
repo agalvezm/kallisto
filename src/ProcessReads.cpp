@@ -1360,7 +1360,7 @@ void ReadProcessor::processBuffer() {
       if (long_read && 0 <= ec &&  ec < index.num_trans && !vlr.empty()) {
         std::vector<std::pair<KmerEntry,int>> vlr_end;
         if (vlr.size() > 5){
-          vlr_end(vlr.end() - 5, vlr.end());
+          vlr_end(vlr.end() - 5, vlr.end();
         } else {
           vlr_end = vlr; 
         }
