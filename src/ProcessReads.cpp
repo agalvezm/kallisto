@@ -1372,15 +1372,17 @@ void ReadProcessor::processBuffer() {
         p2 = findFirstMappingKmer(vlr_end,val2);
         km = Kmer((slr+p));
         km2 = Kmer((slr+p2));
-        /**auto x = index.findPosition(lr[0], km, val, p);
+        auto x = index.findPosition(lr[0], km, val, p);
         auto x2 = index.findPosition(lr[0], km2, val2, p2);
         int tl = -1; 
         if (x.first != -1 && x2.first != -1) {
           tl = l1;
-        }**/
+        }
+        /**
         auto x = index.findPosition(lr[0], km, val, p);
         auto x2 = index.findPosition(lr[0], km2, val2, p2);
         int tl = x2.first + index.k - x.first;
+        **/
         if (0 < tl && tl <= index.target_lens_[lr[0]]) {
           flens_lr[lr[0]] += tl;
           flens_lr_c[lr[0]]++;
