@@ -1044,12 +1044,13 @@ void ReadProcessor::processBuffer() {
   std::vector<int> u, lr;
 
 
-  u.reserve(1000);
-  v1.reserve(1000);
-  v2.reserve(1000);
-  vlr.reserve(1000);
-  lr.reserve(1000);
-  vtmp.reserve(1000);
+  // Make these vectors 10000 instead of 1000 so that they can hold long reads.
+  u.reserve(10000);
+  v1.reserve(10000);
+  v2.reserve(10000);
+  vlr.reserve(10000);
+  lr.reserve(10000);
+  vtmp.reserve(10000);
 
 
   const char* s1 = 0;
