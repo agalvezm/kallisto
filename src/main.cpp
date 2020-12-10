@@ -931,7 +931,7 @@ bool CheckOptionsBus(ProgramOptions& opt) {
         busopt.umi = BUSOptionSubstr(1,0,10);
         busopt.bc.push_back(BUSOptionSubstr(1,10,18));
         busopt.bc.push_back(BUSOptionSubstr(1,48,56));
-        busopt.bc.push_back(BUSOptionSubstr(1,78,86));
+        busopt.bc.push_back(BUSOptionSubstr(1,86,94));
       } else if (opt.technology == "SURECELL") {
         busopt.seq.push_back(BUSOptionSubstr(1,0,0));
         busopt.umi = BUSOptionSubstr(0,18,26);
