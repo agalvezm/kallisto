@@ -928,10 +928,10 @@ bool CheckOptionsBus(ProgramOptions& opt) {
       } else if (opt.technology == "SPLIT-SEQ"){
         busopt.nfiles = 2;
         busopt.seq.push_back(BUSOptionSubstr(0,0,0));
-        busopt.umi = BUSOptionSubstr(1,0,10);
-        busopt.bc.push_back(BUSOptionSubstr(1,10,18));
-        busopt.bc.push_back(BUSOptionSubstr(1,48,56));
-        busopt.bc.push_back(BUSOptionSubstr(1,86,94));
+        busopt.umi = BUSOptionSubstr(1,0,9);
+        busopt.bc.push_back(BUSOptionSubstr(1,9,17));
+        busopt.bc.push_back(BUSOptionSubstr(1,47,55));
+        busopt.bc.push_back(BUSOptionSubstr(1,85,93));
       } else if (opt.technology == "SURECELL") {
         busopt.seq.push_back(BUSOptionSubstr(1,0,0));
         busopt.umi = BUSOptionSubstr(0,18,26);
