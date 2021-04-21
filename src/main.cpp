@@ -556,9 +556,11 @@ void ListSingleCellTechnologies() {
   << "inDropsv1        inDrops version 1 chemistry" << endl
   << "inDropsv2        inDrops version 2 chemistry" << endl
   << "inDropsv3        inDrops version 3 chemistry" << endl
+  << "SciRnaSeq        Sci-Rna-seq" << endl
   << "SCRBSeq          SCRB-Seq" << endl
   << "SPLiT-seq        Split Bio SPLiT-seq" << endl
   << "SureCell         SureCell for ddSEQ" << endl
+    
   << endl;
  }
 
@@ -916,11 +918,17 @@ bool CheckOptionsBus(ProgramOptions& opt) {
         busopt.bc.push_back(BUSOptionSubstr(1,0,11));
         busopt.bc.push_back(BUSOptionSubstr(1,30,38));
       } else if (opt.technology == "INDROPSV3") {
-        busopt.nfiles = 3;
-        busopt.seq.push_back(BUSOptionSubstr(2,0,0));
-        busopt.umi = BUSOptionSubstr(1,8,14);
+        busopt.nfiles = 2;
+        busopt.seq.push_back(BUSOptionSubstr(1,0,0));
+        busopt.umi = BUSOptionSubstr(0,8,14);
         busopt.bc.push_back(BUSOptionSubstr(0,0,8));
-        busopt.bc.push_back(BUSOptionSubstr(1,0,8));
+        busopt.bc.push_back(BUSOptionSubstr(0,0,8));      
+       } else if (opt.technology == "SCIRNASEQ") {
+        busopt.nfiles = 2;
+        busopt.seq.push_back(BUSOptionSubstr(1,0,0));
+        busopt.umi = BUSOptionSubstr(0,16,24);
+        busopt.bc.push_back(BUSOptionSubstr(0,0,10));
+        busopt.bc.push_back(BUSOptionSubstr(0,24,32));  
       } else if (opt.technology == "SCRBSEQ") {
         busopt.seq.push_back(BUSOptionSubstr(1,0,0));
         busopt.umi = BUSOptionSubstr(0,6,16);
@@ -1010,6 +1018,12 @@ bool CheckOptionsBus(ProgramOptions& opt) {
         busopt.umi = BUSOptionSubstr(1,8,14);
         busopt.bc.push_back(BUSOptionSubstr(0,0,8));
         busopt.bc.push_back(BUSOptionSubstr(1,0,8));
+       } else if (opt.technology == "SCIRNASEQ") {
+        busopt.nfiles = 2;
+        busopt.seq.push_back(BUSOptionSubstr(1,0,0));
+        busopt.umi = BUSOptionSubstr(0,16,24);
+        busopt.bc.push_back(BUSOptionSubstr(0,0,10));
+        busopt.bc.push_back(BUSOptionSubstr(0,24,32));
       } else if (opt.technology == "SCRBSEQ") {
         busopt.nfiles = 2;
         busopt.seq.push_back(BUSOptionSubstr(1,0,0));
