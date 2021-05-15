@@ -32,6 +32,9 @@ struct BUSOptions {
       for (auto& b : bc) {
         if (b.start < 0) {
           return 0;
+        } else if (opt.technology == "SCIRNASEQ"){
+          r += 20;
+          std::cout << "worked!" << std::endl;
         } else {
           r += b.stop - b.start;
         }
