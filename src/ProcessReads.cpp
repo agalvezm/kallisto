@@ -2330,8 +2330,11 @@ void AlnProcessor::processBufferGenome() {
   }
   if (mp.opt.bus_mode) {
     //todo replace with what is written to busfile
+    if(opt.technology == "SCIRNASEQ") {
+      bclen = 20;
+    } else {  
     bclen = mp.opt.busOptions.getBCLength();
-    if (bclen == 0) {
+    } if (bclen == 0) {
       bclen = 32;
     }
     umilen = mp.opt.busOptions.getUMILength();
