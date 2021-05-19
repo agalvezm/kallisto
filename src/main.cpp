@@ -927,7 +927,8 @@ bool CheckOptionsBus(ProgramOptions& opt) {
         busopt.nfiles = 2;
         busopt.seq.push_back(BUSOptionSubstr(1,0,0));
         busopt.umi = BUSOptionSubstr(0,16,24);
-        busopt.bc.push_back(BUSOptionSubstr(0,0,34));
+        busopt.bc.push_back(BUSOptionSubstr(0,0,10));
+        busopt.bc.push_back(BUSOptionSubstr(0,24,34));  
       } else if (opt.technology == "SCRBSEQ") {
         busopt.seq.push_back(BUSOptionSubstr(1,0,0));
         busopt.umi = BUSOptionSubstr(0,6,16);
@@ -1021,7 +1022,8 @@ bool CheckOptionsBus(ProgramOptions& opt) {
         busopt.nfiles = 2;
         busopt.seq.push_back(BUSOptionSubstr(1,0,0));
         busopt.umi = BUSOptionSubstr(0,16,24);
-        busopt.bc.push_back(BUSOptionSubstr(0,0,34));
+        busopt.bc.push_back(BUSOptionSubstr(0,0,10));
+        busopt.bc.push_back(BUSOptionSubstr(0,24,34));  
       } else if (opt.technology == "SCRBSEQ") {
         busopt.nfiles = 2;
         busopt.seq.push_back(BUSOptionSubstr(1,0,0));
