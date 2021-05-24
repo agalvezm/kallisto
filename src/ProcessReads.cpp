@@ -1677,7 +1677,7 @@ void BUSProcessor::processBuffer() {
         break;
       }
       if (mp.opt.technology == "SCIRNASEQ") {
-        if (&s[bcc.fileno].substr(10,6).compare("CAGAGC")) {
+        if (bcc[10] == 'A'{
           memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
           memcpy(bc+blen, s[bcc.fileno] + bcc.start + 24, 10);
           blen += 20;
