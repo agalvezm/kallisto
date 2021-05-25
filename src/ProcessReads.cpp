@@ -1690,6 +1690,7 @@ void BUSProcessor::processBuffer() {
       } else {
         memcpy(bc+blen, s[bcc.fileno] + bcc.start, bclen);
         blen += bclen;
+      }
     }
     if (bad_bc) {
       continue;
