@@ -1687,7 +1687,7 @@ void BUSProcessor::processBuffer() {
           memcpy(bc+blen, s[bcc.fileno] + bcc.start + 23, 10); 
           blen += 20;
         }
-      else {
+        else {
         memcpy(bc+blen, s[bcc.fileno] + bcc.start, bclen);
         blen += bclen;
     }
