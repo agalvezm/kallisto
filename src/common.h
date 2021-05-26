@@ -33,7 +33,11 @@ struct BUSOptions {
         if (b.start < 0) {
           return 0;
         } else {
-          r += b.stop - b.start;
+            if (mp.opt.technology == "SCIRNASEQ") {
+              r += 20;
+            } else {
+            r += b.stop - b.start;
+            }
         }
       }
     }
