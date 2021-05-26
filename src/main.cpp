@@ -2012,7 +2012,10 @@ int main(int argc, char *argv[]) {
           if (bclen > 0) {
             write = true;
           }
-        } else {
+        } else if (mp.opt.technology == "SCIRNASEQ"){
+          bclen = 20
+        }
+        else {
           bclen = opt.busOptions.getBCLength();
         }
         if (opt.busOptions.getUMILength() == 0) {
