@@ -1677,7 +1677,6 @@ void BUSProcessor::processBuffer() {
         break;
       }
       if (mp.opt.technology == "SCIRNASEQ") {
-        bcc.stop = 20;
         if (s[bcc.fileno][10] == 'A') {
           memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
           memcpy(bc+blen, s[bcc.fileno] + bcc.start + 24, 10);
@@ -2348,7 +2347,6 @@ void AlnProcessor::processBufferGenome() {
     if (bclen == 0) {
       bclen = 32;
     }
-  }
     umilen = mp.opt.busOptions.getUMILength();
     if (umilen == 0) {
       umilen = 32;
