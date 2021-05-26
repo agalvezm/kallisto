@@ -2348,6 +2348,7 @@ void AlnProcessor::processBufferGenome() {
     if (bclen == 0) {
       bclen = 32;
     }
+  }
     umilen = mp.opt.busOptions.getUMILength();
     if (umilen == 0) {
       umilen = 32;
