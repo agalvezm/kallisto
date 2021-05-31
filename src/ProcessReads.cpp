@@ -1679,12 +1679,12 @@ void BUSProcessor::processBuffer() {
         if (s[bcc.fileno][10] == 'A') {
           // Troubleshooting barcode memory saving
           memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
-          memcpy(bc+blen+10, s[bcc.fileno] + bcc.start + 24, 10);
+          memcpy(bc+blen+10, s[bcc.fileno] + bcc.start + 23, 10);
           blen += 20;
         }
         else {
           memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
-          memcpy(bc+blen, s[bcc.fileno] + bcc.start + 23, 10); 
+          memcpy(bc+blen+10, s[bcc.fileno] + bcc.start + 24, 10); 
           blen += 20;
         }
       } else {
