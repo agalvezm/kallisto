@@ -1666,8 +1666,8 @@ void BUSProcessor::processBuffer() {
       umi_len[umilen]++;
     }
 
-    
-//    auto &bcc = busopt.bc[0];
+    // decomment line below for troubleshooting
+    auto &bcc = busopt.bc[0];
     int blen = 0;
     bool bad_bc = false;
     for (auto &bcc : busopt.bc) {
@@ -1678,6 +1678,9 @@ void BUSProcessor::processBuffer() {
       }
       if (mp.opt.technology == "SCIRNASEQ") {
         if (s[bcc.fileno][10] == 'A') {
+          // Troubleshooting barcode memory saving
+          //memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
+          //memcpy(bc+blen, s[bcc.fileno] + bcc.start + 24, 10);
           memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
           memcpy(bc+blen, s[bcc.fileno] + bcc.start + 24, 10);
           blen += 20;
@@ -1700,11 +1703,11 @@ void BUSProcessor::processBuffer() {
     if (blen >= 0 && blen <= 32) {
       bc_len[blen]++;
     }
-    /* debugging
+    // debugging
     std::cout << "seq " << seq << std::endl;
     std::cout << "bc  " << bc << std::endl;
     std::cout << "umi " << umi << std::endl << std::endl;
-    */
+    //
 
     numreads++;
     v.clear();
