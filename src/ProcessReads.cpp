@@ -1681,7 +1681,7 @@ void BUSProcessor::processBuffer() {
           // Troubleshooting barcode memory saving
           //memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
           //memcpy(bc+blen, s[bcc.fileno] + bcc.start + 24, 10);
-          memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
+          memcpy(bc+blen, s[bcc.fileno] + bcc.start, 15);
           memcpy(bc+blen, s[bcc.fileno] + bcc.start + 24, 10);
           blen += 20;
         }
