@@ -1667,7 +1667,7 @@ void BUSProcessor::processBuffer() {
     }
 
     // decomment line below for troubleshooting
-    auto &bcc = busopt.bc[0];
+    // auto &bcc = busopt.bc[0];
     int blen = 0;
     bool bad_bc = false;
     for (auto &bcc : busopt.bc) {
