@@ -197,11 +197,12 @@ public:
       }
       if (opt.bus_mode) {
         busf_out.open(opt.output + "/output.bus", std::ios::out | std::ios::binary);
-        if (opt.technology == "SCIRNASEQ") {
-          writeBUSHeader(busf_out, 20, opt.busOptions.getUMILength());
-        } else {
+        //if (opt.technology == "SCIRNASEQ") {
+          //writeBUSHeader(busf_out, 20, opt.busOptions.getUMILength());
+      //  } 
+      //else {
           writeBUSHeader(busf_out, opt.busOptions.getBCLength(), opt.busOptions.getUMILength());
-      }
+      //}
       }
     }
 
