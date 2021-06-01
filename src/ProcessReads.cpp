@@ -1669,15 +1669,15 @@ void BUSProcessor::processBuffer() {
     // auto &bcc = busopt.bc[0];
     int blen = 0;
     bool bad_bc = false;
-    for (auto &bcc : busopt.bc) {
-      int bclen = (bcc.start == bcc.stop) ? l[bcc.fileno] - bcc.start : bcc.stop - bcc.start;
-      if (l[bcc.fileno] < bcc.start + bclen) {
-        bad_bc = true;
-        break;
-      }
-      if (mp.opt.technology == "SCIRNASEQ") {
+    
+    if (mp.opt.technology == "SCIRNASEQ") {
+      for (auto &bcc : busopt.bc) {
+        int bclen = (bcc.start == bcc.stop) ? l[bcc.fileno] - bcc.start : bcc.stop - bcc.start;
+        if (l[bcc.fileno] < bcc.start + bclen) {
+          bad_bc = true;
+          break;
+        }
         if (s[bcc.fileno][10] == 'A') {
-          // Troubleshooting barcode memory saving
           memcpy(bc+blen, s[bcc.fileno] + bcc.start, 10);
           memcpy(bc+blen+10, s[bcc.fileno] + bcc.start + 23, 10);
           blen += 20;
@@ -1687,7 +1687,14 @@ void BUSProcessor::processBuffer() {
           memcpy(bc+blen+10, s[bcc.fileno] + bcc.start + 24, 10); 
           blen += 20;
         }
-      } else {
+      }
+    } else {
+        for (auto &bcc : busopt.bc) {
+        int bclen = (bcc.start == bcc.stop) ? l[bcc.fileno] - bcc.start : bcc.stop - bcc.start;
+        if (l[bcc.fileno] < bcc.start + bclen) {
+          bad_bc = true;
+          break;
+        }
         memcpy(bc+blen, s[bcc.fileno] + bcc.start, bclen);
         blen += bclen;
       }
