@@ -2012,9 +2012,9 @@ int main(int argc, char *argv[]) {
           if (bclen > 0) {
             write = true;
           }
-        } //else if (opt.technology == "SCIRNASEQ"){
-          //bclen = 20;
-        //}
+        } else if (opt.technology == "SCIRNASEQ"){
+          bclen = 20;
+        }
         else {
           bclen = opt.busOptions.getBCLength();
         }
